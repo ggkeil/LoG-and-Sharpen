@@ -102,8 +102,12 @@ imgSum = gray + sharpenedimg # add the original image to the LoG image multiplie
 
 # show the output images
 cv2.imshow("original", gray)
-cv2.imshow("Gaussian Output", gaussianOutput)
+cv2.imshow("Output After Gaussian", gaussianOutput)
 cv2.imshow("Output After Laplacian", laplacianOutput)
 cv2.imshow("Output After Sharpening", imgSum)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
+
+cv2.imwrite("WomanAfterGaussian", gaussianOutput)
+cv2.imwrite("WomanAfterLaplacian", laplacianOutput)
+cv2.imwrite("WomanAfterSharpening", imgSum)
