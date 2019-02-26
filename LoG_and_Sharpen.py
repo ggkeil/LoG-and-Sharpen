@@ -5,7 +5,7 @@ import argparse
 import cv2
 
 # we assume both image and kernel are numpy arrays
-# basically image convolution
+# scaling is a default. If you don't want to scale, put 0 for the scale argument
 def imgfilter(image, kernel, scale = 1):
     # grab the spatial dimensions of the image, along with
 	# the spatial dimensions of the kernel
@@ -39,42 +39,44 @@ def imgfilter(image, kernel, scale = 1):
 			# store the convolved value in the output (x,y)-
 			# coordinate of the output image
             output[y - pad, x - pad] = k
-            
+    
+    # if the default is kept        
     if scale == 1:
-        output = rescale_intensity(output, in_range=(0,255))
-        output = (output * 255).astype("uint8")
+        output = rescale_intensity(output, in_range=(0,255)) # scale the intensities to the range 0 to 255
+        output = (output * 255).astype("uint8") # cast it as an int
+    
     # return the output image
     return output
 
 # outputs the gaussian kernel with sigma and kernel size provided
 def gaussiankernel(sigma, kernelsize):
     k = 1 # you can change this if desired
-    sum = 0
-    kernel = np.zeros((kernelsize,kernelsize)) # Pre-allocate matrix
+    sum = 0 # to be used for averaging
+    kernel = np.zeros((kernelsize, kernelsize)) # Pre-allocate matrix
     for i in range(-(kernelsize // 2), (kernelsize // 2) + 1):
-        for j in range(-(kernelsize // 2), (kernelsize // 2) + 1):
-            kernel[i + (kernelsize // 2), j + (kernelsize // 2)] = k * np.exp(-((i*i + j*j) / (2. * sigma * sigma)))
+        for j in range(-(kernelsize // 2), (kernelsize // 2) + 1): # Looping over every element of the kernel
+            kernel[i + (kernelsize // 2), j + (kernelsize // 2)] = k * np.exp(-((i*i + j*j) / (2. * sigma * sigma))) # assign each number of the kernel the correct value based on Gaussian formula
             sum += kernel[i + (kernelsize // 2), j + (kernelsize // 2)]
             
-    return kernel / sum
+    return kernel / sum # average the matrix after it is complete
 
-# creates a 3 x 3 45 degree isotropic kernel
+# creates a Laplacian kernel
 # other Laplacian kernels are commented out in this function
 def laplaciankernel():
     #kernel = np.array([[-10, -5, -2, -1, -2, -5, -10], [-5, 0, 3, 4, 3, 0, -5], [-2, 3, 6, 7, 6, 3, -2], [-1, 4, 7, 8, 7, 4, -1], [-2, 3, 6, 7, 6, 3, -2], [-5, 0, 3, 4, 3, 0, -5], [-10, -5, -2, -1, -2, -5, -10]])
     #kernel = np.array([[-4, -1, 0, -1, -4], [-1, 2, 3, 2, -1], [0, 3, 4, 3, 0], [-1, 2, 3, 2, -1], [-4, -1, 0, -1, -4]])
-    kernel = np.array([[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]])
-    #kernel = np.array([[0, -1, 0], [-1, 4, -1], [0, -1, 0]])
+    kernel = np.array([[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]]) # 45 degree isotropic
+    #kernel = np.array([[0, -1, 0], [-1, 4, -1], [0, -1, 0]]) # 90 degree 
     #kernel = np.array([[-2, 1, -2], [1, 4, 1], [-2, 1, -2]])
     #kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
     return kernel
 
 # used for muliplying the LoG by the constant c
 def sharpenimg(c, image):
-    output = c * image
-    output = rescale_intensity(output, in_range=(0,255))
+    output = c * image # Main operation
+    output = rescale_intensity(output, in_range=(0,255)) # rescale the intensity
     output = (output * 255).astype("uint8")
-    return output
+    return output # return the image after it has been multiplied by c
 
 # User input area, run this with command prompt
 ap = argparse.ArgumentParser()
@@ -101,13 +103,14 @@ sharpenedimg =  sharpenimg(int(c), laplacianOutput) # multiply the LoG image by 
 imgSum = gray + sharpenedimg # add the original image to the LoG image multiplied by a constant
 
 # show the output images
-cv2.imshow("original", gray)
-cv2.imshow("Output After Gaussian", gaussianOutput)
-cv2.imshow("Output After Laplacian", laplacianOutput)
-cv2.imshow("Output After Sharpening", imgSum)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+cv2.imshow("original", gray) # Original grayscale image
+cv2.imshow("Output After Gaussian", gaussianOutput) # Output after the Gaussian filter is applied
+cv2.imshow("Output After Laplacian", laplacianOutput) # Output after the Laplacian filter is applied over the Gaussian image
+cv2.imshow("Output After Sharpening", imgSum) # Output after the LoG is multiplied by c and added to the original image
+cv2.waitKey(0) # If you press enter
+cv2.destroyAllWindows() # Close all images being shown
 
-cv2.imwrite("WomanAfterGaussian", gaussianOutput)
-cv2.imwrite("WomanAfterLaplacian", laplacianOutput)
-cv2.imwrite("WomanAfterSharpening", imgSum)
+# change the file names to desired if needed
+cv2.imwrite("WomanAfterGaussian.png", gaussianOutput)
+cv2.imwrite("WomanAfterLaplacian.png", laplacianOutput)
+cv2.imwrite("WomanAfterSharpening.png", imgSum)
